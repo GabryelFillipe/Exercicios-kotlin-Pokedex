@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = "detail",
+                        startDestination = "home",
                         exitTransition = {
                             slideOutOfContainer(
                                 towards = AnimatedContentTransitionScope.SlideDirection.Left,
@@ -68,26 +68,13 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(
-                            route = "detail",
-                           // arguments = listOf(
-//                                navArgument("id") {
-//                                    type = NavType.IntType
-//                                }),
-                            exitTransition = {
-                                slideOutOfContainer(
-                                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
-                                    animationSpec = tween(1000)
-                                )
-                            }
-                        ) {
+                            route = "detail/{id}",
+                            arguments = listOf(navArgument("id") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val id = backStackEntry.arguments?.getString("id")
+                            println("LOG_POKEDEX: Navegando para o ID $id")
 
-                            val name = it.arguments?.getInt("id")
-
-                            DetailScreen(
-                                modifier = Modifier.padding(innerPadding),
-                                navController = navController,
-
-                                )
+                            DetailScreen(navController = navController, pokemonId = id ?: "")
                         }
 
                     }

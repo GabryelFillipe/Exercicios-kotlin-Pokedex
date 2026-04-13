@@ -18,8 +18,8 @@ object RetrofitClient {
 class PokemonRepository {
     private val api = RetrofitClient.api
 
-    suspend fun getPokemonList(limit: Int = 151): PokemonListResponse {
-        return api.getPokemonList(limit = limit)
+    suspend fun getPokemonList(limit: Int = 1025, offset: Int = 0): PokemonListResponse {
+        return api.getPokemonList(limit = limit, offset = offset)
     }
 
     suspend fun getPokemonDetail(name: String): PokemonDetailResponse {

@@ -2,6 +2,7 @@ package com.example.pokedex.screen.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -19,18 +21,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.pokedex.R
 import com.example.pokedex.components.PokemonCard
+import kotlinx.coroutines.flow.collect
 
 @Composable
 fun HomeScreen(
@@ -40,12 +47,23 @@ fun HomeScreen(
     navController: NavController,
 ) {
     val pokemonsState by homeScreenViewModel.pokemonList.collectAsStateWithLifecycle()
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.layoutInfo.visibleItemsInfo }
+            .collect { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                if (lastVisibleItem != null && lastVisibleItem.index >= pokemonsState.size - 5) {
+                    homeScreenViewModel.loadMorePokemons()
+                }
+            }
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .background(Color(255, 0, 0, 255))
                 .height(100.dp)
                 .padding(16.dp),
@@ -59,7 +77,8 @@ fun HomeScreen(
             ) {
                 Image(
                     painter = painterResource(R.drawable.pokeball),
-                    contentDescription = "Pokebola"
+                    contentDescription = "Pokebola",
+                    colorFilter = ColorFilter.tint(Color.White)
                 )
                 Text(
                     text = "Pokedex",
@@ -73,7 +92,9 @@ fun HomeScreen(
         OutlinedTextField(
             value = "",
             onValueChange = {},
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             trailingIcon = {
                 IconButton(onClick = {}) {
                     Icon(Icons.Default.Search, contentDescription = "")
@@ -84,7 +105,8 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(100.dp),
+            columns = GridCells.Fixed(3),
+            state = gridState,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -92,13 +114,16 @@ fun HomeScreen(
             items(pokemonsState.size) { index ->
                 val pokemon = pokemonsState[index]
 
-                val pokemonId = pokemon.url.split("/").dropLast(1).last()
-
                 PokemonCard(
-                    id = "#${pokemonId.padStart(3,'0')}",
+                    id = pokemon.id,
                     name = pokemon.name,
-                    typeColor = Color(0xFF78C850),
-                    imageUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/$pokemonId.png"                )
+                    typeColor = pokemon.typeEnum.colorHex.let { Color(it) },
+                    imageUrl = pokemon.imageUrl,
+                    modifier = Modifier.clickable {
+                        val cleanId = pokemon.id.replace("#", "").toInt().toString()
+                        navController.navigate("detail/${cleanId}")
+                    }
+                )
             }
         }
     }
