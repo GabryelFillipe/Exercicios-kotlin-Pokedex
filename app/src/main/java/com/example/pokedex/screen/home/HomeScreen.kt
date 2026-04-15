@@ -113,16 +113,17 @@ fun HomeScreen(
         ) {
             items(pokemonsState.size) { index ->
                 val pokemon = pokemonsState[index]
+                val pokemonColor  = pokemon.typeEnum.colorHex.let { Color(it) }
 
                 PokemonCard(
                     id = pokemon.id,
                     name = pokemon.name,
-                    typeColor = pokemon.typeEnum.colorHex.let { Color(it) },
+                    typeColor = pokemonColor,
                     imageUrl = pokemon.imageUrl,
                     modifier = Modifier.clickable {
-                        val cleanId = pokemon.id.replace("#", "").toInt().toString()
-                        navController.navigate("detail/${cleanId}")
-                    }
+                        navController.navigate("detail/${pokemon.name}/${pokemonColor}")
+                    },
+
                 )
             }
         }

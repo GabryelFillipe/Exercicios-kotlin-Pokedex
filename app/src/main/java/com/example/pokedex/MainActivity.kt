@@ -1,5 +1,6 @@
 package com.example.pokedex
 
+import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,9 +22,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.pokedex.screen.details.DetailScreen
+import com.example.pokedex.screen.details.DetailScreenViewModel
 import com.example.pokedex.screen.home.HomeScreen
 import com.example.pokedex.screen.home.HomeScreenViewModel
 import com.example.pokedex.ui.theme.PokedexTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,21 +63,32 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         ) {
+                            val homeViewModel: HomeScreenViewModel = viewModel()
                             HomeScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 navController = navController,
-                                homeScreenViewModel = HomeScreenViewModel(),
+                                homeScreenViewModel = homeViewModel,
                                 onPokemonClick = {}
                             )
                         }
                         composable(
-                            route = "detail/{id}",
-                            arguments = listOf(navArgument("id") { type = NavType.StringType })
+                            route = "detail/{name}/{color}",
+                            arguments = listOf(
+                                navArgument("name") { type = NavType.StringType },
+                                navArgument("color") {type = NavType.StringType}
+                            )
                         ) { backStackEntry ->
-                            val id = backStackEntry.arguments?.getString("id")
-                            println("LOG_POKEDEX: Navegando para o ID $id")
+                            val name = backStackEntry.arguments?.getString("name")
+                            val color = backStackEntry.arguments?.getString("color")
+                            println("LOG_POKEDEX: Navegando para o ID $name")
 
-                            DetailScreen(navController = navController, pokemonId = id ?: "")
+                            val detailViewModel: DetailScreenViewModel = viewModel()
+                            DetailScreen(
+                                navController = navController,
+                                pokemonName = name ?: "",
+                                pokemonColor = color?: "",
+                                detailScreenViewModel = detailViewModel
+                            )
                         }
 
                     }
